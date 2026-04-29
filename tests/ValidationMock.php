@@ -1,0 +1,33 @@
+<?php
+/*
+ * This file is part of Webisters Validation Library.
+ *
+ * (c) Hafiz Muhammad Moaz <thewebisters@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+namespace Tests\Validation;
+
+use Framework\Validation\Validation;
+use JetBrains\PhpStorm\Pure;
+
+class ValidationMock extends Validation
+{
+    #[Pure]
+    public function parseRule(string $rule) : array
+    {
+        return parent::parseRule($rule);
+    }
+
+    #[Pure]
+    public function extractRules(string $rules) : array
+    {
+        return parent::extractRules($rules);
+    }
+
+    public function replaceArgs(array $args, array $data) : array
+    {
+        return parent::replaceArgs($args, $data);
+    }
+}
