@@ -163,6 +163,11 @@ class Validator extends BaseValidator
     /**
      * Validates a JSON string.
      *
+     * json_validate() arrived in PHP 8.3 and this package supports 8.2, so the
+     * older decode-and-check path stands in there. It gives the same answer and
+     * only costs the decoded value it throws away, which is exactly what
+     * json_validate() exists to avoid.
+     *
      * @param string $field
      * @param array<string,mixed> $data
      *
@@ -174,7 +179,11 @@ class Validator extends BaseValidator
         if ($data === null) {
             return false;
         }
-        return \json_validate($data);
+        if (\function_exists('json_validate')) {
+            return \json_validate($data);
+        }
+        \json_decode($data);
+        return \json_last_error() === \JSON_ERROR_NONE;
     }
 
     /**

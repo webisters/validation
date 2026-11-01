@@ -129,6 +129,51 @@ final class ValidatorTest extends TestCase
         self::assertFalse(Validator::json('unknown', $this->array));
     }
 
+    /**
+     * json() has two implementations, json_validate() on PHP 8.3 and up and a
+     * decode-and-check fallback on 8.2, so the cases that tell them apart are
+     * worth pinning: only one of the two runs on any given version.
+     *
+     * @return void
+     */
+    public function testJsonAcrossValueShapes() : void
+    {
+        $valid = [
+            'object' => '{"a":1}',
+            'emptyObject' => '{}',
+            'emptyArray' => '[]',
+            'list' => '[1,2,3]',
+            'nested' => '{"nested":{"deep":[1,{"x":null}]}}',
+            'string' => '"str"',
+            'int' => '1',
+            'float' => '1.5',
+            'true' => 'true',
+            'false' => 'false',
+            'null' => 'null',
+            'deepButWithinLimit' => '[[[[[[[[[[[[[[[[[[[[[1]]]]]]]]]]]]]]]]]]]]]',
+        ];
+        foreach ($valid as $name => $json) {
+            self::assertTrue(Validator::json('v', ['v' => $json]), $name);
+        }
+        $invalid = [
+            'danglingValue' => '{"a":}',
+            'unclosedObject' => '{',
+            'unclosedArray' => '[1,2,',
+            'trailingComma' => '{"a":1,}',
+            'singleQuotes' => "{'a':1}",
+            'bareWord' => 'undefined',
+            'empty' => '',
+            'whitespace' => ' ',
+            'invalidUtf8' => "\xB1\x31",
+            // Past the 512 default nesting depth, which both implementations
+            // refuse.
+            'beyondDepth' => \str_repeat('[', 600) . \str_repeat(']', 600),
+        ];
+        foreach ($invalid as $name => $json) {
+            self::assertFalse(Validator::json('v', ['v' => $json]), $name);
+        }
+    }
+
     public function testMaxLength() : void
     {
         self::assertTrue(Validator::maxLength('alpha', $this->array, 3));
